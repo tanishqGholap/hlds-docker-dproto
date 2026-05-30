@@ -70,6 +70,7 @@ RUN sed -i 's/dlls\/hl\.so/addons\/metamod\/dlls\/metamod.so/g' /opt/steam/hlds/
 RUN curl -sqL "$amxmod_url" | tar -C /opt/steam/hlds/cstrike/ -zxvf - \
     && echo 'linux addons/amxmodx/dlls/amxmodx_mm_i386.so' >> /opt/steam/hlds/cstrike/addons/metamod/plugins.ini
 RUN cat /opt/steam/hlds/cstrike/mapcycle.txt >> /opt/steam/hlds/cstrike/addons/amxmodx/configs/maps.ini
+ADD files/maps.ini /opt/steam/hlds/cstrike/addons/amxmodx/configs/maps.ini
 
 # Install dproto
 RUN mkdir -p /opt/steam/hlds/cstrike/addons/dproto
