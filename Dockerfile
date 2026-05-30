@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM ubuntu:22.04
 
 ARG hlds_build=7882
 ARG metamod_version=1.21p38
@@ -14,11 +14,11 @@ ARG jk_botti_url="http://koti.kapsi.fi/jukivili/web/jk_botti/jk_botti-$jk_botti_
 # WARNING: setlocale('en_US.UTF-8') failed, using locale: 'C'.
 # International characters may not work.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    locales=2.28-10 \
+    locales \
  && rm -rf /var/lib/apt/lists/* \
  && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
-ENV LANG en_US.utf8
-ENV LC_ALL en_US.UTF-8
+ENV LANG=en_US.utf8
+ENV LC_ALL=en_US.UTF-8
 
 # Fix error:
 # Unable to determine CPU Frequency. Try defining CPU_MHZ.
@@ -28,12 +28,12 @@ ENV CPU_MHZ=2300
 RUN groupadd -r steam && useradd -r -g steam -m -d /opt/steam steam
 
 RUN apt-get -y update && apt-get install -y --no-install-recommends \
-    ca-certificates=20190110 \
-    curl=7.64.0-4+deb10u1 \
-    lib32gcc1=1:8.3.0-6 \
-    unzip=6.0-23+deb10u1 \
-    xz-utils=5.2.4-1 \
-    zip=3.0-11+b1 \
+    ca-certificates \
+    curl \
+    lib32gcc-s1 \
+    unzip \
+    xz-utils \
+    zip \
  && apt-get -y autoremove \
  && rm -rf /var/lib/apt/lists/*
 
@@ -57,39 +57,43 @@ RUN mkdir -p "$HOME/.steam" \
 # Fix warnings:
 # couldn't exec listip.cfg
 # couldn't exec banned.cfg
-RUN touch /opt/steam/hlds/valve/listip.cfg
-RUN touch /opt/steam/hlds/valve/banned.cfg
+RUN touch /opt/steam/hlds/cstrike/listip.cfg
+RUN touch /opt/steam/hlds/cstrike/banned.cfg
 
 # Install Metamod-P
-RUN mkdir -p /opt/steam/hlds/valve/addons/metamod/dlls \
-    && touch /opt/steam/hlds/valve/addons/metamod/plugins.ini
-RUN curl -sqL "$metamod_url" | tar -C /opt/steam/hlds/valve/addons/metamod/dlls -xJ
-RUN sed -i 's/dlls\/hl\.so/addons\/metamod\/dlls\/metamod.so/g' /opt/steam/hlds/valve/liblist.gam
+RUN mkdir -p /opt/steam/hlds/cstrike/addons/metamod/dlls \
+    && touch /opt/steam/hlds/cstrike/addons/metamod/plugins.ini
+RUN curl -sqL "$metamod_url" | tar -C /opt/steam/hlds/cstrike/addons/metamod/dlls -xJ
+RUN sed -i 's/dlls\/hl\.so/addons\/metamod\/dlls\/metamod.so/g' /opt/steam/hlds/cstrike/liblist.gam
 
 # Install AMX mod X
-RUN curl -sqL "$amxmod_url" | tar -C /opt/steam/hlds/valve/ -zxvf - \
-    && echo 'linux addons/amxmodx/dlls/amxmodx_mm_i386.so' >> /opt/steam/hlds/valve/addons/metamod/plugins.ini
-RUN cat /opt/steam/hlds/valve/mapcycle.txt >> /opt/steam/hlds/valve/addons/amxmodx/configs/maps.ini
+RUN curl -sqL "$amxmod_url" | tar -C /opt/steam/hlds/cstrike/ -zxvf - \
+    && echo 'linux addons/amxmodx/dlls/amxmodx_mm_i386.so' >> /opt/steam/hlds/cstrike/addons/metamod/plugins.ini
+RUN cat /opt/steam/hlds/cstrike/mapcycle.txt >> /opt/steam/hlds/cstrike/addons/amxmodx/configs/maps.ini
 
 # Install dproto
-RUN mkdir -p /opt/steam/hlds/valve/addons/dproto
-COPY lib/dproto/bin/Linux/dproto_i386.so /opt/steam/hlds/valve/addons/dproto/dproto_i386.so
-COPY lib/dproto/dproto.cfg /opt/steam/hlds/valve/dproto.cfg
-RUN echo 'linux addons/dproto/dproto_i386.so' >> /opt/steam/hlds/valve/addons/metamod/plugins.ini
-COPY lib/dproto/amxx/* /opt/steam/hlds/valve/addons/amxmodx/scripting/
+RUN mkdir -p /opt/steam/hlds/cstrike/addons/dproto
+COPY lib/dproto/bin/Linux/dproto_i386.so /opt/steam/hlds/cstrike/addons/dproto/dproto_i386.so
+COPY lib/dproto/dproto.cfg /opt/steam/hlds/cstrike/dproto.cfg
+RUN echo 'linux addons/dproto/dproto_i386.so' >> /opt/steam/hlds/cstrike/addons/metamod/plugins.ini
+COPY lib/dproto/amxx/* /opt/steam/hlds/cstrike/addons/amxmodx/scripting/
 
 # Install bind_key
-COPY lib/bind_key/amxx/bind_key.amxx /opt/steam/hlds/valve/addons/amxmodx/plugins/bind_key.amxx
-RUN echo 'bind_key.amxx            ; binds keys for voting' >> /opt/steam/hlds/valve/addons/amxmodx/configs/plugins.ini
+COPY lib/bind_key/amxx/bind_key.amxx /opt/steam/hlds/cstrike/addons/amxmodx/plugins/bind_key.amxx
+RUN echo 'bind_key.amxx            ; binds keys for voting' >> /opt/steam/hlds/cstrike/addons/amxmodx/configs/plugins.ini
 
 # Install jk_botti
-RUN curl -sqL "$jk_botti_url" | tar -C /opt/steam/hlds/valve/ -xJ \
-    && echo 'linux addons/jk_botti/dlls/jk_botti_mm_i386.so' >> /opt/steam/hlds/valve/addons/metamod/plugins.ini
+RUN curl -sqL "$jk_botti_url" | tar -C /opt/steam/hlds/cstrike/ -xJ \
+    && echo 'linux addons/jk_botti/dlls/jk_botti_mm_i386.so' >> /opt/steam/hlds/cstrike/addons/metamod/plugins.ini
 
 WORKDIR /opt/steam/hlds
 
-# Copy default config
-COPY valve valve
+# Add default config
+ADD files/server.cfg /opt/steam/hlds/cstrike/server.cfg
+
+# Add maps
+ADD maps/* /opt/steam/hlds/cstrike/maps/
+ADD files/mapcycle.txt /opt/steam/hlds/cstrike/mapcycle.txt
 
 RUN chmod +x hlds_run hlds_linux
 
